@@ -1,4 +1,4 @@
-const SPREADSHEET_ID = "18dEH7_PCLy7LtugJXSAE9omnVvaEux_RbUqmMBJNHHQ";
+const SPREADSHEET_ID = "1ZdUbi9TVJI2yjyii74fVbMkpMpYlRblc_LyxF4luRB8";
 const SHEET_NAME = "Submissions";
 const NOTIFICATION_EMAIL = "intellrecurso.bd@gmail.com";
 
