@@ -48,6 +48,42 @@ soundButton.addEventListener("click", async () => {
 });
 
 const form = document.querySelector("#invitation-form");
+
+function submitViaHiddenIframe(endpoint, params) {
+  const iframeName = "cityscape-form-target";
+  let iframe = document.getElementById(iframeName);
+  if (!iframe) {
+    iframe = document.createElement("iframe");
+    iframe.id = iframeName;
+    iframe.name = iframeName;
+    iframe.style.display = "none";
+    iframe.setAttribute("aria-hidden", "true");
+    document.body.appendChild(iframe);
+  }
+
+  const hiddenForm = document.createElement("form");
+  hiddenForm.method = "POST";
+  hiddenForm.action = endpoint;
+  hiddenForm.target = iframeName;
+  hiddenForm.style.display = "none";
+
+  for (const [key, value] of params.entries()) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = key;
+    input.value = value;
+    hiddenForm.appendChild(input);
+  }
+
+  document.body.appendChild(hiddenForm);
+  hiddenForm.submit();
+  hiddenForm.remove();
+}
+
+function showSuccessState(reference) {
+  document.querySelector(".form-card").innerHTML = `<div class="success-state" role="status"><span class="success-kicker">Application received</span><h3>You're on the radar.</h3><p>Keep this private reference:</p><strong>${reference}</strong><p>Our team will contact selected guests using the details submitted.</p></div>`;
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const error = document.querySelector(".form-error");
@@ -57,16 +93,27 @@ form.addEventListener("submit", async (event) => {
   submit.textContent = "Sending…";
   const data = Object.fromEntries(new FormData(form));
   const endpoint = window.CITYSCAPE_FORM_ENDPOINT;
+  const reference = `CITY-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  const payload = new URLSearchParams({ ...data, reference });
+
   try {
     if (!endpoint) throw new Error("Registration is not configured yet. Please try again later.");
-    const reference = `CITY-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-    const payload = new URLSearchParams({ ...data, reference });
-    await fetch(endpoint, {
-      method: "POST",
-      mode: "no-cors",
-      body: payload,
-    });
-    document.querySelector(".form-card").innerHTML = `<div class="success-state" role="status"><span class="success-kicker">Application received</span><h3>You're on the radar.</h3><p>Keep this private reference:</p><strong>${reference}</strong><p>Our team will contact selected guests using the details submitted.</p></div>`;
+
+    try {
+      await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body: payload,
+      });
+      showSuccessState(reference);
+      return;
+    } catch (fetchError) {
+      submitViaHiddenIframe(endpoint, payload);
+      setTimeout(() => showSuccessState(reference), 1200);
+      return;
+    }
   } catch (reason) {
     error.textContent = reason instanceof Error ? reason.message : "We could not save your application. Please try again.";
     error.hidden = false;

@@ -1,10 +1,14 @@
 const SPREADSHEET_ID = "1ZdUbi9TVJI2yjyii74fVbMkpMpYlRblc_LyxF4luRB8";
 const SHEET_NAME = "Submissions";
-const NOTIFICATION_EMAIL = "intellrecurso.bd@gmail.com";
+const NOTIFICATION_EMAIL = "abdunnoorshihab@gmail.com";
+
+function doGet(e) {
+  return doPost(e);
+}
 
 function doPost(e) {
   try {
-    const data = e.parameter || {};
+    const data = e && e.parameter ? e.parameter : {};
     if (data.website) return jsonResponse({ ok: true });
 
     const required = ["name", "phone", "dateOfBirth", "email", "reference"];
